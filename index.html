@@ -260,49 +260,48 @@
           }, 600);
       }
 
-      // 지식 분류 매핑 지능 도우미
-      function detectType(filename) {
-          const lower = filename.toLowerCase();
-          if (lower.includes('pulse') || lower.includes('weekly') || lower.includes('report') || lower.includes('draft')) {
-              return { label: 'L4: OUTPUTS', color: '#a855f7', prefix: 'outputs/' };
-          } else if (lower.includes('project') || lower.includes('proxy') || lower.includes('pivot') || lower.includes('harness')) {
-              return { label: 'L3: PROJECTS', color: '#10b981', prefix: 'projects/' };
+      // 지식의 실제 폴더 경로(relPath)를 바탕으로 해당 파일이 어느 등급에 속하는지 정확히 판정합니다.
+      function getActualType(relPath) {
+          if (relPath.startsWith('outputs/')) {
+              return { label: 'L4: OUTPUTS', color: '#a855f7' };
+          } else if (relPath.startsWith('projects/')) {
+              return { label: 'L3: PROJECTS', color: '#10b981' };
           } else {
-              return { label: 'L2: CONCEPTS', color: '#3b82f6', prefix: 'wiki/concepts/' };
+              // wiki/concepts 또는 root 등의 파일은 Concepts 허브로 맵핑
+              return { label: 'L2: CONCEPTS', color: '#3b82f6' };
           }
       }
 
-      // 깃허브 리포지토리 파일 열람 URL 생성 도우미
-      function getGithubFileUrl(filename) {
+      // 깃허브 리포지토리 파일 열람 URL 생성 도우미 (실제 상대경로 relPath 기준 조립)
+      function getGithubFileUrl(relPath) {
           const hostname = window.location.hostname;
           const pathname = window.location.pathname;
-          const typeInfo = detectType(filename);
           
-          // 1순위: 깃허브 페이지스 환경일 때 동적 주소 추출
+          // 1순위: 깃허브 페이지스 환경일 때 동적 주소 추출 (기본 폴백 리포지토리는 wiki_dash)
           if (hostname.includes('.github.io')) {
               const username = hostname.split('.')[0];
-              const repo = pathname.split('/').filter(Boolean)[0] || '1st_brain';
-              return `https://github.com/${username}/${repo}/blob/main/${typeInfo.prefix}${filename}`;
+              const repo = pathname.split('/').filter(Boolean)[0] || 'wiki_dash';
+              return `https://github.com/${username}/${repo}/blob/main/${relPath}`;
           }
           
-          // 2순위: 그 외 환경(폴백) - CLAUDE.md의 뇌 모델 정보 기반 매핑
-          return `https://github.com/foolpoet44/1st_brain/blob/main/${typeInfo.prefix}${filename}`;
+          // 2순위: 그 외 환경(폴백) - 리포지토리명 wiki_dash를 기본값으로 제공
+          return `https://github.com/foolpoet44/wiki_dash/blob/main/${relPath}`;
       }
 
       // 파일 열기 핵심 인터랙션 (환경별 분기)
-      async function openFile(name) {
+      async function openFile(name, relPath) {
           const log = document.getElementById('op-log');
           const p = document.createElement('p');
           
           if (isLocal) {
-              // 로컬 모드: 실제 server.py API를 이용하여 OS 수준에서 파일 기동
+              // 로컬 모드: 실제 server.py API를 이용하여 OS 수준에서 파일 기동 (파일명으로 검색)
               p.innerText = `> Local Command: Opening file ${name}`;
               p.className = 'text-emerald-400 animate-pulse';
               log.prepend(p);
               fetch(`/api/open?file=${encodeURIComponent(name)}`);
           } else {
-              // 클라우드/깃허브 Pages 모드: 깃허브 저장소 마크다운 웹 뷰어 새창 열기
-              const githubUrl = getGithubFileUrl(name);
+              // 클라우드 모드: data.json에 기록된 실제 상대경로를 이용해 깃허브 웹 뷰어 새창 열기
+              const githubUrl = getGithubFileUrl(relPath);
               p.innerText = `> Cloud View: Opening GitHub Viewer for ${name}`;
               p.className = 'text-blue-400 animate-pulse';
               log.prepend(p);
@@ -375,10 +374,10 @@
               list.innerHTML = data.recent_files.map(f => `
                   <li class="flex justify-between items-center group p-2 rounded-lg hover:bg-gray-900/40 border border-transparent hover:border-gray-800/60 transition duration-200">
                       <div class="flex items-center gap-2 overflow-hidden">
-                          <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700/60 text-gray-400 cursor-pointer" onclick="openFile('${f.name}')" title="${envTitle}">
+                          <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700/60 text-gray-400 cursor-pointer" onclick="openFile('${f.name}', '${f.path}')" title="${envTitle}">
                               ${envIcon}
                           </span>
-                          <span onclick="openFile('${f.name}')" class="btn-open font-medium text-xs truncate max-w-[200px] md:max-w-[320px]">
+                          <span onclick="openFile('${f.name}', '${f.path}')" class="btn-open font-medium text-xs truncate max-w-[200px] md:max-w-[320px]">
                               ${f.name}
                           </span>
                       </div>
@@ -396,7 +395,7 @@
               nodes.push({id: 'L4', label: '🟣 OUTPUTS', color: '#a855f7', shape: 'ellipse', size: 30, font: {color: '#ffffff', size: 10, face: 'Outfit'}});
 
               data.recent_files.forEach((f, i) => {
-                  const typeInfo = detectType(f.name);
+                  const typeInfo = getActualType(f.path);
                   const nodeColor = {
                       background: '#0d1117',
                       border: '#30363d',
@@ -411,7 +410,7 @@
                       font: { color: '#c9d1d9', size: 9, face: 'Inter' }
                   });
 
-                  // 지식 성격에 따른 적절한 허브에 스마트 결합
+                  // 지식 성격에 따른 적절한 허브에 스마트 결합 (정확한 1:1 분류 대응)
                   if (typeInfo.label.includes('L2')) {
                       edges.push({from: 'L2', to: i, color: {color: '#3b82f6', opacity: 0.4}});
                   } else if (typeInfo.label.includes('L3')) {
@@ -456,8 +455,8 @@
                       const nodeId = params.nodes[0];
                       // 허브 노드(L2, L3, L4)는 더블클릭 이벤트에서 스킵
                       if (nodeId !== 'L2' && nodeId !== 'L3' && nodeId !== 'L4') {
-                          const clickedFileName = data.recent_files[nodeId].name;
-                          openFile(clickedFileName);
+                          const clickedFile = data.recent_files[nodeId];
+                          openFile(clickedFile.name, clickedFile.path);
                       }
                   }
               });
