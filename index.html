@@ -272,20 +272,18 @@
           }
       }
 
-      // 깃허브 리포지토리 파일 열람 URL 생성 도우미 (실제 상대경로 relPath 기준 조립)
+      // 깃허브 리포지토리 파일 열람 URL 생성 도우미 (원본 지식 저장소인 1st_brain 강제 매핑)
       function getGithubFileUrl(relPath) {
           const hostname = window.location.hostname;
-          const pathname = window.location.pathname;
           
-          // 1순위: 깃허브 페이지스 환경일 때 동적 주소 추출 (기본 폴백 리포지토리는 wiki_dash)
+          // 1순위: 깃허브 페이지스 환경일 때 동적으로 유저명을 추출하여 1st_brain 저장소에 연결
           if (hostname.includes('.github.io')) {
               const username = hostname.split('.')[0];
-              const repo = pathname.split('/').filter(Boolean)[0] || 'wiki_dash';
-              return `https://github.com/${username}/${repo}/blob/main/${relPath}`;
+              return `https://github.com/${username}/1st_brain/blob/main/${relPath}`;
           }
           
-          // 2순위: 그 외 환경(폴백) - 리포지토리명 wiki_dash를 기본값으로 제공
-          return `https://github.com/foolpoet44/wiki_dash/blob/main/${relPath}`;
+          // 2순위: 그 외 환경(로컬 등) - foolpoet44/1st_brain 저장소를 기본 폴백으로 지정
+          return `https://github.com/foolpoet44/1st_brain/blob/main/${relPath}`;
       }
 
       // 파일 열기 핵심 인터랙션 (환경별 분기)
