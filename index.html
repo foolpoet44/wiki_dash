@@ -171,7 +171,7 @@
             <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 🟢 L3: PROJECTS</div>
             <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> 🟣 L4: OUTPUTS</div>
             <div class="h-px bg-gray-800 my-1"></div>
-            <div class="text-[9px] text-gray-500 italic">뉴런 더블 클릭 시 파일 기동</div>
+            <div class="text-[9px] text-gray-500 italic">뉴런 더블 클릭 시 파일 열람</div>
           </div>
         </div>
 
@@ -247,7 +247,7 @@
           badge.innerText = '⚡ Local Mode';
           badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
       } else {
-          badge.innerText = '☁️ Cloud Mode (Obsidian Sync)';
+          badge.innerText = '☁️ Cloud Mode (GitHub Viewer)';
           badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30';
       }
 
@@ -258,6 +258,35 @@
           setTimeout(() => {
               body.classList.remove('pulse-glow');
           }, 600);
+      }
+
+      // 지식 분류 매핑 지능 도우미
+      function detectType(filename) {
+          const lower = filename.toLowerCase();
+          if (lower.includes('pulse') || lower.includes('weekly') || lower.includes('report') || lower.includes('draft')) {
+              return { label: 'L4: OUTPUTS', color: '#a855f7', prefix: 'outputs/' };
+          } else if (lower.includes('project') || lower.includes('proxy') || lower.includes('pivot') || lower.includes('harness')) {
+              return { label: 'L3: PROJECTS', color: '#10b981', prefix: 'projects/' };
+          } else {
+              return { label: 'L2: CONCEPTS', color: '#3b82f6', prefix: 'wiki/concepts/' };
+          }
+      }
+
+      // 깃허브 리포지토리 파일 열람 URL 생성 도우미
+      function getGithubFileUrl(filename) {
+          const hostname = window.location.hostname;
+          const pathname = window.location.pathname;
+          const typeInfo = detectType(filename);
+          
+          // 1순위: 깃허브 페이지스 환경일 때 동적 주소 추출
+          if (hostname.includes('.github.io')) {
+              const username = hostname.split('.')[0];
+              const repo = pathname.split('/').filter(Boolean)[0] || '1st_brain';
+              return `https://github.com/${username}/${repo}/blob/main/${typeInfo.prefix}${filename}`;
+          }
+          
+          // 2순위: 그 외 환경(폴백) - CLAUDE.md의 뇌 모델 정보 기반 매핑
+          return `https://github.com/foolpoet44/1st_brain/blob/main/${typeInfo.prefix}${filename}`;
       }
 
       // 파일 열기 핵심 인터랙션 (환경별 분기)
@@ -272,15 +301,14 @@
               log.prepend(p);
               fetch(`/api/open?file=${encodeURIComponent(name)}`);
           } else {
-              // 클라우드/깃허브 Pages 모드: Obsidian URI 프로토콜 스킴 발동
-              // 옵시디언 vault명은 1st_brain으로 연동
-              const obsidianUri = `obsidian://open?vault=1st_brain&file=${encodeURIComponent(name.replace('.md', ''))}`;
-              p.innerText = `> Cloud Link: Invoking Obsidian for ${name}`;
+              // 클라우드/깃허브 Pages 모드: 깃허브 저장소 마크다운 웹 뷰어 새창 열기
+              const githubUrl = getGithubFileUrl(name);
+              p.innerText = `> Cloud View: Opening GitHub Viewer for ${name}`;
               p.className = 'text-blue-400 animate-pulse';
               log.prepend(p);
               
-              // 부드럽게 새 창/URI 프로토콜 론칭
-              window.location.href = obsidianUri;
+              // 새 탭으로 깃허브 저장소의 마크다운 소스 뷰어 화면 활성화
+              window.open(githubUrl, '_blank');
           }
       }
 
@@ -293,18 +321,6 @@
                   syncIcon.classList.remove('animate-spin');
               }, 500);
           });
-      }
-
-      // 지식 분류 매핑 지능 도우미
-      function detectType(filename) {
-          const lower = filename.toLowerCase();
-          if (lower.includes('pulse') || lower.includes('weekly') || lower.includes('report') || lower.includes('draft')) {
-              return { label: 'L4: OUTPUTS', color: '#a855f7', prefix: 'outputs/' };
-          } else if (lower.includes('project') || lower.includes('proxy') || lower.includes('pivot') || lower.includes('harness')) {
-              return { label: 'L3: PROJECTS', color: '#10b981', prefix: 'projects/' };
-          } else {
-              return { label: 'L2: CONCEPTS', color: '#3b82f6', prefix: 'wiki/concepts/' };
-          }
       }
 
       // 3. 통합 대시보드 렌더러
@@ -353,8 +369,8 @@
 
               // 시냅스 리스트 구성 및 환경 기반 배지 추가
               const list = document.getElementById('synapse-list');
-              const envIcon = isLocal ? '⚡' : '🗂️';
-              const envTitle = isLocal ? '로컬 서버 기동' : 'Obsidian 연동 기동';
+              const envIcon = isLocal ? '⚡' : '🌐';
+              const envTitle = isLocal ? '로컬 서버 기동' : 'GitHub 저장소 파일 열람';
               
               list.innerHTML = data.recent_files.map(f => `
                   <li class="flex justify-between items-center group p-2 rounded-lg hover:bg-gray-900/40 border border-transparent hover:border-gray-800/60 transition duration-200">
