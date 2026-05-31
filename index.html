@@ -3,232 +3,307 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CSP-Brain: Synaptic Control Tower</title>
-    <!-- 고급 타이포그래피 적용 -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+    <title>CSP-Brain: Synaptic Control Tower V6</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
+      :root {
+        --bg-color: #05070a;
+        --card-bg: rgba(10, 14, 20, 0.85);
+        --accent-blue: #3b82f6;
+        --accent-emerald: #10b981;
+        --accent-purple: #a855f7;
+        --border-color: rgba(48, 54, 61, 0.5);
+      }
       body {
-        background-color: #080b10;
+        background-color: var(--bg-color);
         color: #f0f6fc;
-        font-family: 'Inter', 'Outfit', sans-serif;
+        font-family: "Inter", sans-serif;
         overflow: hidden;
-        transition: box-shadow 0.5s ease;
       }
-      
-      /* 맥박 네온 애니메이션 효과 */
-      .pulse-glow {
-        box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1);
-      }
-
-      #network-container {
-        height: 50vh;
-        background: radial-gradient(circle at center, #111622 0%, #080b10 100%);
-        border-radius: 16px;
-        border: 1px solid rgba(48, 54, 61, 0.6);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-      }
-
       .glass-card {
-        background: rgba(13, 17, 24, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(48, 54, 61, 0.6);
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
         border-radius: 16px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
       }
-
       .glass-card:hover {
-        border-color: rgba(88, 166, 255, 0.4);
-        box-shadow: 0 4px 30px rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.4);
       }
-
-      .btn-open {
-        color: #58a6ff;
-        cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      #network-container {
+        height: 52vh;
+        background: radial-gradient(circle at center, #0d111b 0%, #05070a 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
-
+      .stat-icon {
+        font-size: 1.2rem;
+        opacity: 0.8;
+      }
       .btn-open:hover {
-        color: #79c0ff;
-        text-shadow: 0 0 10px rgba(88, 166, 255, 0.8);
+        text-shadow: 0 0 12px var(--accent-blue);
       }
 
-      /* 스택형 지식 메타볼리즘 프로그레스 바 스타일 */
-      .progress-segment {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        cursor: pointer;
+      /* Resilience Pulse */
+      @keyframes pulse-resilience {
+        0% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
       }
-      
-      .progress-segment:hover {
-        transform: scaleY(1.2);
-        filter: brightness(1.2);
-      }
-
-      /* 툴팁 스타일 */
-      .tooltip {
-        visibility: hidden;
-        position: absolute;
-        bottom: 125%;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #161b22;
-        color: #c9d1d9;
-        text-align: center;
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #30363d;
-        font-size: 11px;
-        white-space: nowrap;
-        z-index: 50;
-        opacity: 0;
-        transition: opacity 0.2s, visibility 0.2s;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      }
-
-      .progress-segment:hover .tooltip {
-        visibility: visible;
-        opacity: 1;
+      .resilience-active {
+        animation: pulse-resilience 2s infinite;
       }
 
       ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
+        width: 4px;
       }
       ::-webkit-scrollbar-thumb {
-        background: #21262d;
+        background: #1f2937;
         border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #30363d;
-      }
-
-      /* 싱크 리플 애니메이션 */
-      @keyframes ripple {
-        0% { transform: scale(1); opacity: 1; }
-        100% { transform: scale(1.5); opacity: 0; }
-      }
-      .ripple-dot::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        border-radius: 50%;
-        border: 2px solid #10b981;
-        animation: ripple 1.5s infinite ease-out;
       }
     </style>
   </head>
-  <body class="h-screen flex flex-col p-4 md:p-6 transition-all duration-700">
-    
-    <!-- HEADER -->
-    <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-800/40">
+  <body class="h-screen flex flex-col p-4 md:p-6">
+    <!-- TOP NAVIGATION & STATUS -->
+    <header class="flex justify-between items-end mb-6">
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight font-['Outfit'] bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400">
-          🧠 CSP-Brain V5: Synaptic Control Tower
-        </h1>
-        <p class="text-xs text-gray-500 italic mt-1 flex items-center gap-1.5">
-          <span id="env-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">DETECTING MODE...</span>
-          뉴런을 클릭하여 지식을 의식의 영역으로 동기화하십시오.
+        <div class="flex items-center gap-3">
+          <h1
+            class="text-3xl font-bold font-['Outfit'] bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400"
+          >
+            Synaptic Control Tower V6
+          </h1>
+          <span
+            class="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[9px] font-bold text-blue-400 tracking-tighter"
+            >RESILIENCE ACTIVE</span
+          >
+        </div>
+        <p class="text-xs text-gray-500 italic mt-1">
+          지식 대사는 정지하지 않습니다. 모든 장애는 재개의 연료가 됩니다.
         </p>
       </div>
-      
-      <div class="flex items-center gap-4">
-        <!-- 수동 새로고침 인터랙션 -->
-        <button onclick="triggerManualSync()" class="p-2 rounded-lg bg-gray-900/50 hover:bg-gray-800/80 border border-gray-800 transition-all text-gray-400 hover:text-white" title="새로고침">
-          <svg id="sync-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.2M4 9h3.18"></path>
-          </svg>
-        </button>
-        
-        <div class="text-right flex flex-col items-end">
-          <span id="update-timer" class="text-[10px] font-mono text-gray-500">SYNCING...</span>
-          <div id="status" class="relative flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 relative ripple-dot"></span>
-            <span>SYSTEM ACTIVE</span>
+
+      <div class="flex items-center gap-6">
+        <!-- Resolver Status -->
+        <div class="hidden md:flex flex-col items-end">
+          <span
+            class="text-[9px] uppercase text-gray-600 font-bold tracking-widest leading-none mb-1"
+            >Active Resolver</span
+          >
+          <span
+            class="text-[11px] font-mono text-indigo-400 bg-indigo-950/30 px-2 py-1 rounded border border-indigo-900/40"
+            >routing -> _ops/scripts/resolver_engine.py</span
+          >
+        </div>
+        <!-- System Heartbeat -->
+        <div class="text-right">
+          <span
+            id="update-timer"
+            class="text-[9px] font-mono text-gray-600 block mb-1"
+            >SYNCING...</span
+          >
+          <div
+            id="status"
+            class="flex items-center gap-2 text-xs font-bold text-emerald-400"
+          >
+            <span
+              class="w-2.5 h-2.5 rounded-full bg-emerald-500 resilience-active"
+            ></span>
+            <span>GAIA-BRAIN ONLINE</span>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- MAIN BODY -->
-    <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
-      <!-- Left: Knowledge Graph & Recent Synapses -->
-      <div class="lg:col-span-2 flex flex-col gap-6 overflow-hidden">
-        
-        <!-- Graph Area -->
-        <div id="network-container" class="relative flex-1">
-          <!-- 범례 -->
-          <div class="absolute top-4 left-4 z-10 text-[10px] bg-black/60 backdrop-blur-md p-3 rounded-lg border border-gray-800 text-gray-400 space-y-1 font-mono">
-            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> 🔵 L2: CONCEPTS</div>
-            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 🟢 L3: PROJECTS</div>
-            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> 🟣 L4: OUTPUTS</div>
-            <div class="h-px bg-gray-800 my-1"></div>
-            <div class="text-[9px] text-gray-500 italic">뉴런 더블 클릭 시 파일 열람</div>
+    <!-- CONTENT GRID -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+      <!-- LEFT: The Knowledge Graph (7 Cols) -->
+      <div class="lg:col-span-8 flex flex-col gap-6">
+        <div id="network-container" class="relative group">
+          <div
+            class="absolute top-4 left-4 z-10 p-3 rounded-xl bg-black/40 backdrop-blur text-[10px] border border-white/5 space-y-2 pointer-events-none"
+          >
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span> Concepts
+              (L2)
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Projects
+              (L3)
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span> Outputs
+              (L4)
+            </div>
           </div>
         </div>
 
-        <!-- Recent Synapses -->
-        <div class="glass-card h-[28vh] p-5 flex flex-col overflow-hidden">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 flex justify-between items-center">
-            <span>⚡ Recent Synapses</span>
-            <span class="text-[10px] text-blue-400 font-mono tracking-normal">CLICK TO SYNAPSE</span>
-          </h3>
-          <div class="flex-1 overflow-y-auto pr-1">
-            <ul id="synapse-list" class="space-y-2 text-sm">
-              <!-- Dynamic Items -->
-            </ul>
+        <div
+          class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden"
+        >
+          <!-- Recent Activity -->
+          <div class="glass-card p-5 flex flex-col">
+            <h3
+              class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 flex justify-between"
+            >
+              <span>Recent Synapses</span>
+              <span class="text-blue-400 animate-pulse">● LIVE</span>
+            </h3>
+            <ul
+              id="synapse-list"
+              class="flex-1 overflow-y-auto space-y-1 pr-1"
+            ></ul>
+          </div>
+          <!-- Task Tracker (Today's Harness Focus) -->
+          <div
+            class="glass-card p-5 flex flex-col bg-gradient-to-br from-gray-900/40 to-transparent"
+          >
+            <h3
+              class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 flex justify-between"
+            >
+              <span>Harness Checklist</span>
+              <span class="text-indigo-400">ANTI-BIAS MODE</span>
+            </h3>
+            <div
+              class="space-y-3 overflow-y-auto pr-1 text-[11px] text-gray-400"
+            >
+              <div class="flex items-start gap-2 group">
+                <input
+                  type="checkbox"
+                  checked
+                  disabled
+                  class="mt-0.5 rounded border-gray-700 bg-gray-950"
+                />
+                <span class="group-hover:text-white transition"
+                  >8-Cluster Ontology Mapping (L2)</span
+                >
+              </div>
+              <div class="flex items-start gap-2 group">
+                <input
+                  type="checkbox"
+                  checked
+                  disabled
+                  class="mt-0.5 rounded border-gray-700 bg-gray-950"
+                />
+                <span class="group-hover:text-white transition"
+                  >Claude 4.8 Effort Control Logic</span
+                >
+              </div>
+              <div class="flex items-start gap-2 group">
+                <input
+                  type="checkbox"
+                  class="mt-0.5 rounded border-gray-700 bg-gray-950"
+                />
+                <span class="group-hover:text-white transition text-indigo-300"
+                  >Durable Task Hand-off prototyping</span
+                >
+              </div>
+              <div class="flex items-start gap-2 group">
+                <input
+                  type="checkbox"
+                  class="mt-0.5 rounded border-gray-700 bg-gray-950"
+                />
+                <span class="group-hover:text-white transition"
+                  >Resolver v1.1 Integration with Skills</span
+                >
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Stats, Metabolism & Operation Log -->
-      <div class="flex flex-col gap-6 overflow-y-auto">
-        
-        <!-- Metabolism Stats & Bar -->
-        <div class="glass-card p-5">
-          <h3 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest font-['Outfit']">
-            Metabolism Stats
-          </h3>
-          
-          <div class="grid grid-cols-2 gap-4 text-center mb-6">
-            <div class="p-3 bg-blue-900/10 rounded-xl border border-blue-500/20">
-              <p class="text-[10px] text-blue-400 uppercase font-semibold">Density</p>
-              <p id="total-atoms" class="text-3xl font-bold font-['Outfit'] text-blue-300">--</p>
+      <!-- RIGHT: Metabolism & Strategy (4 Cols) -->
+      <div class="lg:col-span-4 flex flex-col gap-6">
+        <!-- Stats Card -->
+        <div class="glass-card p-5 bg-blue-500/[0.02]">
+          <div class="grid grid-cols-2 gap-4 pb-5 border-b border-white/5">
+            <div class="space-y-1">
+              <p
+                class="text-[10px] font-bold text-blue-500 uppercase tracking-widest"
+              >
+                Density
+              </p>
+              <p id="total-atoms" class="text-3xl font-black font-['Outfit']">
+                --
+              </p>
             </div>
-            <div class="p-3 bg-emerald-900/10 rounded-xl border border-emerald-500/20">
-              <p class="text-[10px] text-emerald-400 uppercase font-semibold">Velocity</p>
-              <p id="recent-activity" class="text-3xl font-bold font-['Outfit'] text-emerald-300">--</p>
+            <div class="space-y-1">
+              <p
+                class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest"
+              >
+                Velocity
+              </p>
+              <p
+                id="recent-activity"
+                class="text-3xl font-black font-['Outfit']"
+              >
+                --
+              </p>
             </div>
           </div>
-
-          <!-- 누적 지식 생태계 분포도 (Progress Bar) -->
-          <div class="space-y-2">
-            <h4 class="text-[11px] text-gray-500 font-medium uppercase flex justify-between">
-              <span>지식 분류 밸런스</span>
-              <span id="distribution-text" class="font-mono text-gray-400">LOADING...</span>
-            </h4>
-            <div id="distribution-bar" class="h-4 bg-gray-900 rounded-full flex overflow-hidden border border-gray-800/60 p-0.5">
-              <!-- Dynamic Segments -->
-            </div>
+          <div
+            class="pt-5 flex justify-between items-center text-[10px] font-mono"
+          >
+            <span class="text-gray-500">Distribution:</span>
+            <span id="distribution-text" class="text-gray-300 font-bold"
+              >...</span
+            >
           </div>
+          <div
+            id="distribution-bar"
+            class="h-1.5 w-full bg-gray-800 rounded-full mt-2 flex overflow-hidden"
+          ></div>
         </div>
 
-        <!-- Active Operations Log -->
-        <div class="glass-card p-5 flex-1 flex flex-col overflow-hidden">
-          <h3 class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest font-['Outfit']">
-            Active Operations
+        <!-- Strategy Insight (Evolution Digest) -->
+        <div class="glass-card p-5 flex flex-col bg-purple-500/[0.03]">
+          <h3
+            class="text-[11px] font-black uppercase tracking-[0.2em] text-purple-400 mb-4 flex justify-between"
+          >
+            <span>Strategic Evolution Insight</span>
+            <span
+              id="serendipity-pulse"
+              class="text-[9px] text-purple-500/50"
+            ></span>
           </h3>
-          <div id="op-log" class="flex-1 overflow-y-auto text-[11px] font-mono space-y-2 text-gray-500 pr-1">
-            <p class="text-emerald-500/80">> Control Tower V5 active...</p>
-            <p class="text-blue-400/80">> Ready for synapse activation.</p>
+          <div
+            id="evolution-digest"
+            class="text-xs text-gray-400 leading-relaxed overflow-y-auto max-h-[25vh]"
+          ></div>
+        </div>
+
+        <!-- Knowledge Gaps (Gap Analysis) -->
+        <div
+          class="glass-card p-5 flex-1 flex flex-col border-yellow-500/10 bg-yellow-500/[0.01]"
+        >
+          <h3
+            class="text-[11px] font-black uppercase tracking-[0.2em] text-yellow-500 mb-3 flex justify-between"
+          >
+            <span>Knowledge Gaps</span>
+            <span
+              id="stale-badge"
+              class="px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-500 text-[8px]"
+            ></span>
+          </h3>
+          <div
+            id="gap-list"
+            class="flex-1 overflow-y-auto text-[10px] space-y-1.5 text-gray-500"
+          >
+            <p class="italic text-[9px] text-gray-600">
+              고립된 문서들을 연결하여 신경망을 강화하세요.
+            </p>
+            <ul id="orphan-list" class="space-y-1 mt-2"></ul>
           </div>
         </div>
       </div>
@@ -236,261 +311,240 @@
 
     <script>
       let network = null;
-      let lastFetchedTime = null;
-      
-      // 1. 접속 환경 파악 (로컬 vs 클라우드 배포 환경)
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      
-      // UI 배지 업데이트
-      const badge = document.getElementById('env-badge');
-      if (isLocal) {
-          badge.innerText = '⚡ Local Mode';
-          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-      } else {
-          badge.innerText = '☁️ Cloud Mode (GitHub Viewer)';
-          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30';
-      }
+      const isLocal =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
 
-      // 2. 스마트 싱크 및 네온 파동 피드백
-      function triggerPulseGlow() {
-          const body = document.body;
-          body.classList.add('pulse-glow');
-          setTimeout(() => {
-              body.classList.remove('pulse-glow');
-          }, 600);
-      }
-
-      // 지식의 실제 폴더 경로(relPath)를 바탕으로 해당 파일이 어느 등급에 속하는지 정확히 판정합니다.
-      function getActualType(relPath) {
-          if (relPath.startsWith('outputs/')) {
-              return { label: 'L4: OUTPUTS', color: '#a855f7' };
-          } else if (relPath.startsWith('projects/')) {
-              return { label: 'L3: PROJECTS', color: '#10b981' };
-          } else {
-              // wiki/concepts 또는 root 등의 파일은 Concepts 허브로 맵핑
-              return { label: 'L2: CONCEPTS', color: '#3b82f6' };
-          }
-      }
-
-      // 깃허브 리포지토리 파일 열람 URL 생성 도우미 (원본 지식 저장소인 1st_brain 강제 매핑)
-      function getGithubFileUrl(relPath) {
-          const hostname = window.location.hostname;
-          
-          // 1순위: 깃허브 페이지스 환경일 때 동적으로 유저명을 추출하여 1st_brain 저장소에 연결
-          if (hostname.includes('.github.io')) {
-              const username = hostname.split('.')[0];
-              return `https://github.com/${username}/1st_brain/blob/main/${relPath}`;
-          }
-          
-          // 2순위: 그 외 환경(로컬 등) - foolpoet44/1st_brain 저장소를 기본 폴백으로 지정
-          return `https://github.com/foolpoet44/1st_brain/blob/main/${relPath}`;
-      }
-
-      // 파일 열기 핵심 인터랙션 (환경별 분기)
       async function openFile(name, relPath) {
-          const log = document.getElementById('op-log');
-          const p = document.createElement('p');
-          
-          if (isLocal) {
-              // 로컬 모드: 실제 server.py API를 이용하여 OS 수준에서 파일 기동 (파일명으로 검색)
-              p.innerText = `> Local Command: Opening file ${name}`;
-              p.className = 'text-emerald-400 animate-pulse';
-              log.prepend(p);
-              fetch(`/api/open?file=${encodeURIComponent(name)}`);
-          } else {
-              // 클라우드 모드: data.json에 기록된 실제 상대경로를 이용해 깃허브 웹 뷰어 새창 열기
-              const githubUrl = getGithubFileUrl(relPath);
-              p.innerText = `> Cloud View: Opening GitHub Viewer for ${name}`;
-              p.className = 'text-blue-400 animate-pulse';
-              log.prepend(p);
-              
-              // 새 탭으로 깃허브 저장소의 마크다운 소스 뷰어 화면 활성화
-              window.open(githubUrl, '_blank');
-          }
+        if (isLocal) {
+          fetch(`/api/open?file=${encodeURIComponent(name)}`);
+          const log = document.getElementById("op-log");
+          const p = document.createElement("p");
+          p.innerText = `> Activating Checkpoint: ${name}`;
+          p.className = "text-emerald-400";
+          log.prepend(p);
+        } else {
+          window.open(
+            `https://github.com/foolpoet44/1st_brain/blob/main/${relPath}`,
+            "_blank",
+          );
+        }
       }
 
-      // 수동 동기화 트리거
-      function triggerManualSync() {
-          const syncIcon = document.getElementById('sync-icon');
-          syncIcon.classList.add('animate-spin');
-          updateDashboard().then(() => {
-              setTimeout(() => {
-                  syncIcon.classList.remove('animate-spin');
-              }, 500);
-          });
+      function renderEvolutionDigest(changes) {
+        const container = document.getElementById("evolution-digest");
+        if (!changes || changes.length === 0) return;
+        const change = changes[0];
+        container.innerHTML = `
+              <div class="space-y-3">
+                  <p class="font-bold text-white">${change.title}</p>
+                  <p class="text-blue-200">${change.date}</p>
+                  <p class="pl-3 border-l-2 border-emerald-500 italic">"${change.why_important}"</p>
+              </div>
+          `;
       }
 
-      // 3. 통합 대시보드 렌더러
       async function updateDashboard() {
-          try {
-              const res = await fetch('data.json');
-              if (!res.ok) throw new Error('Network response not ok');
-              const data = await res.json();
+        try {
+          const res = await fetch("data.json");
+          const data = await res.json();
 
-              triggerPulseGlow();
+          document.getElementById("total-atoms").innerText = data.total_atoms;
+          document.getElementById("recent-activity").innerText =
+            data.recent_activity;
+          document.getElementById("distribution-text").innerText =
+            `C:${data.l2} P:${data.l3} O:${data.l4}`;
 
-              // 기본 스탯 주입
-              document.getElementById('total-atoms').innerText = data.total_atoms;
-              document.getElementById('recent-activity').innerText = data.recent_activity;
-
-              // 우측 상단 업데이트 시각 기록
-              const now = new Date();
-              lastFetchedTime = now.toLocaleTimeString();
-              document.getElementById('update-timer').innerText = `SYNCED AT ${lastFetchedTime}`;
-
-              // 지식 분류 밸런스 프로그레스 바 렌더링
-              const l2 = data.l2 || 0;
-              const l3 = data.l3 || 0;
-              const l4 = data.l4 || 0;
-              const inbox = data.inbox || 0;
-              const total = l2 + l3 + l4 + inbox;
-
-              const distText = document.getElementById('distribution-text');
-              distText.innerText = `C:${l2} | P:${l3} | O:${l4} | I:${inbox}`;
-
-              const distBar = document.getElementById('distribution-bar');
-              distBar.innerHTML = `
-                  <div class="progress-segment bg-blue-500 h-full" style="width: ${(l2/total*100)}%" title="L2: Concepts">
-                      <span class="tooltip">🧠 L2 Concepts: ${l2}개 (${Math.round(l2/total*100)}%)<br><span class="text-gray-400">원리와 이론 학습 단계</span></span>
-                  </div>
-                  <div class="progress-segment bg-emerald-500 h-full" style="width: ${(l3/total*100)}%" title="L3: Projects">
-                      <span class="tooltip">🟢 L3 Projects: ${l3}개 (${Math.round(l3/total*100)}%)<br><span class="text-gray-400">지식의 실행 및 결합 단계</span></span>
-                  </div>
-                  <div class="progress-segment bg-purple-500 h-full" style="width: ${(l4/total*100)}%" title="L4: Outputs">
-                      <span class="tooltip">🟣 L4 Outputs: ${l4}개 (${Math.round(l4/total*100)}%)<br><span class="text-gray-400">완결된 정제 성과물</span></span>
-                  </div>
-                  <div class="progress-segment bg-amber-500 h-full" style="width: ${(inbox/total*100)}%" title="Inbox">
-                      <span class="tooltip">📥 Inbox: ${inbox}개 (${Math.round(inbox/total*100)}%)<br><span class="text-gray-400">소화 대기 중인 원재료</span></span>
-                  </div>
+          const total = data.l2 + data.l3 + data.l4;
+          document.getElementById("distribution-bar").innerHTML = `
+                  <div class="bg-blue-500 h-full" style="width:${(data.l2 / total) * 100}%"></div>
+                  <div class="bg-emerald-500 h-full" style="width:${(data.l3 / total) * 100}%"></div>
+                  <div class="bg-purple-500 h-full" style="width:${(data.l4 / total) * 100}%"></div>
               `;
 
-              // 시냅스 리스트 구성 및 환경 기반 배지 추가
-              const list = document.getElementById('synapse-list');
-              const envIcon = isLocal ? '⚡' : '🌐';
-              const envTitle = isLocal ? '로컬 서버 기동' : 'GitHub 저장소 파일 열람';
-              
-              list.innerHTML = data.recent_files.map(f => `
-                  <li class="flex justify-between items-center group p-2 rounded-lg hover:bg-gray-900/40 border border-transparent hover:border-gray-800/60 transition duration-200">
-                      <div class="flex items-center gap-2 overflow-hidden">
-                          <span class="text-[9px] px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700/60 text-gray-400 cursor-pointer" onclick="openFile('${f.name}', '${f.path}')" title="${envTitle}">
-                              ${envIcon}
-                          </span>
-                          <span onclick="openFile('${f.name}', '${f.path}')" class="btn-open font-medium text-xs truncate max-w-[200px] md:max-w-[320px]">
-                              ${f.name}
-                          </span>
-                      </div>
-                      <span class="text-[9px] font-mono text-gray-500 group-hover:text-gray-300 transition">${f.time}</span>
-                  </li>
-              `).join('');
-
-              // 4. 의미 기반 시맨틱 네트워크 그래프 시뮬레이션
-              const nodes = [];
-              const edges = [];
-
-              // 허브 노드 구성
-              nodes.push({id: 'L2', label: '🧠 CONCEPTS', color: '#3b82f6', shape: 'ellipse', size: 30, font: {color: '#ffffff', size: 10, face: 'Outfit'}});
-              nodes.push({id: 'L3', label: '🟢 PROJECTS', color: '#10b981', shape: 'ellipse', size: 30, font: {color: '#ffffff', size: 10, face: 'Outfit'}});
-              nodes.push({id: 'L4', label: '🟣 OUTPUTS', color: '#a855f7', shape: 'ellipse', size: 30, font: {color: '#ffffff', size: 10, face: 'Outfit'}});
-
-              data.recent_files.forEach((f, i) => {
-                  const typeInfo = getActualType(f.path);
-                  const nodeColor = {
-                      background: '#0d1117',
-                      border: '#30363d',
-                      highlight: { background: '#161b22', border: typeInfo.color }
-                  };
-                  
-                  nodes.push({
-                      id: i, 
-                      label: f.name.replace('.md', ''), 
-                      color: nodeColor,
-                      shape: 'box',
-                      font: { color: '#c9d1d9', size: 9, face: 'Inter' }
-                  });
-
-                  // 지식 성격에 따른 적절한 허브에 스마트 결합 (정확한 1:1 분류 대응)
-                  if (typeInfo.label.includes('L2')) {
-                      edges.push({from: 'L2', to: i, color: {color: '#3b82f6', opacity: 0.4}});
-                  } else if (typeInfo.label.includes('L3')) {
-                      edges.push({from: 'L3', to: i, color: {color: '#10b981', opacity: 0.4}});
-                  } else {
-                      edges.push({from: 'L4', to: i, color: {color: '#a855f7', opacity: 0.4}});
-                  }
-              });
-
-              const container = document.getElementById('network-container');
-              const graphData = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
-              const options = {
-                  physics: { 
-                      enabled: true, 
-                      solver: 'forceAtlas2Based',
-                      forceAtlas2Based: {
-                          gravitationalConstant: -26,
-                          centralGravity: 0.005,
-                          springLength: 80,
-                          springConstant: 0.08
-                      }
-                  },
-                  nodes: { 
-                      borderWidth: 1.5,
-                      shadow: true 
-                  },
-                  edges: { 
-                      width: 1.5,
-                      smooth: { type: 'continuous' }
-                  },
-                  interaction: {
-                      hover: true,
-                      tooltipDelay: 200
-                  }
-              };
-
-              network = new vis.Network(container, graphData, options);
-
-              // 더블클릭 시 파일 기동 인터랙션 바인딩
-              network.on("doubleClick", function (params) {
-                  if (params.nodes.length > 0) {
-                      const nodeId = params.nodes[0];
-                      // 허브 노드(L2, L3, L4)는 더블클릭 이벤트에서 스킵
-                      if (nodeId !== 'L2' && nodeId !== 'L3' && nodeId !== 'L4') {
-                          const clickedFile = data.recent_files[nodeId];
-                          openFile(clickedFile.name, clickedFile.path);
-                      }
-                  }
-              });
-
-              // 노드 호버 시 관련 시냅스 하이라이팅 인터랙션
-              network.on("hoverNode", function (params) {
-                  if (params.node) {
-                      const log = document.getElementById('op-log');
-                      const nodeLabel = nodes.find(n => n.id === params.node)?.label || 'Node';
-                      
-                      // 허브 노드가 아닐 경우에만 로그 출력
-                      if (nodeLabel !== '🧠 CONCEPTS' && nodeLabel !== '🟢 PROJECTS' && nodeLabel !== '🟣 OUTPUTS') {
-                          const p = document.createElement('p');
-                          p.innerText = `> Synapse Hover: Focusing ${nodeLabel}...`;
-                          p.className = 'text-gray-400';
-                          log.prepend(p);
-                      }
-                  }
-              });
-
-          } catch (e) { 
-              console.error('Dashboard Sync Error', e); 
-              const log = document.getElementById('op-log');
-              const p = document.createElement('p');
-              p.innerText = `> Error: Sync lost with database.`;
-              p.className = 'text-rose-500 font-bold';
-              log.prepend(p);
+          // Evolution & Serendipity
+          if (data.serendipity) {
+            const digest = document.getElementById("evolution-digest");
+            document.getElementById("serendipity-pulse").innerText =
+              "✦ INSIGHT";
+            digest.innerHTML = `
+                <div class="space-y-3 animate-in fade-in duration-700">
+                    <p class="font-bold text-purple-300 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping"></span>
+                        ${data.serendipity.title}
+                    </p>
+                    <p class="text-[11px] leading-relaxed text-gray-400 bg-purple-500/5 p-2 rounded border border-purple-500/10">
+                        ${data.serendipity.reason}
+                    </p>
+                    <div class="flex gap-2">
+                        ${data.serendipity.links
+                          .map(
+                            (l) => `
+                            <button onclick="openFile('${l.split("/").pop()}', '${l}')" class="text-[9px] px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition">
+                                [[${l.split("/").pop().replace(".md", "")}]]
+                            </button>
+                        `,
+                          )
+                          .join("")}
+                        <button onclick="alert('Claude Code에게 이 두 문서의 [Soul Bridge] 생성을 요청하세요.')" class="text-[9px] px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 border border-purple-500/30 transition flex items-center gap-1">
+                            <span>✦ Connect</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-white/5 opacity-50">
+                    ${data.latest_changes
+                      .map(
+                        (c) => `
+                        <div class="text-[10px] mb-2">
+                            <p class="text-gray-300 font-medium">${c.title}</p>
+                            <p class="text-gray-600">${c.date}</p>
+                        </div>
+                    `,
+                      )
+                      .slice(0, 1)
+                      .join("")}
+                </div>
+            `;
+          } else {
+            renderEvolutionDigest(data.latest_changes);
           }
+
+          // Knowledge Gaps
+          document.getElementById("stale-badge").innerText =
+            `${data.stale_count} STALE`;
+          const orphanList = document.getElementById("orphan-list");
+          orphanList.innerHTML = data.orphans
+            .map(
+              (o) => `
+                <li class="flex justify-between items-center group cursor-pointer hover:text-white transition" onclick="openFile('${o.name}', '${o.path}')">
+                    <span class="truncate max-w-[150px]">${o.name.replace(".md", "")}</span>
+                    <span class="text-[8px] text-gray-700 group-hover:text-yellow-500">ISOLATED</span>
+                </li>
+            `,
+            )
+            .join("");
+
+          const list = document.getElementById("synapse-list");
+          list.innerHTML = data.recent_files
+            .map(
+              (f) => `
+                  <li class="flex justify-between items-center group cursor-pointer p-1 rounded hover:bg-white/5" onclick="openFile('${f.name}', '${f.path}')">
+                      <span class="text-[11px] truncate max-w-[200px] text-gray-300 group-hover:text-blue-400 font-medium">${f.name}</span>
+                      <span class="text-[9px] font-mono text-gray-600">${f.time}</span>
+                  </li>
+              `,
+            )
+            .join("");
+
+          // Graph Rendering
+          let nodes = [];
+          let edges = [];
+
+          if (data.graph && data.graph.nodes.length > 0) {
+            nodes = data.graph.nodes.map((n) => ({
+              ...n,
+              color: { background: "#0a0e14", border: "#30363d" },
+              font: { color: "#8b949e", size: 8 },
+            }));
+            // Add Category Hubs
+            nodes.push(
+              {
+                id: "L2",
+                label: "CONCEPTS",
+                color: "#3b82f6",
+                shape: "diamond",
+                size: 20,
+              },
+              {
+                id: "L3",
+                label: "PROJECTS",
+                color: "#10b981",
+                shape: "diamond",
+                size: 20,
+              },
+              {
+                id: "L4",
+                label: "OUTPUTS",
+                color: "#a855f7",
+                shape: "diamond",
+                size: 20,
+              },
+            );
+            edges = data.graph.edges.map((e) => ({
+              ...e,
+              color: { opacity: 0.4, color: "#3b82f6" },
+            }));
+
+            // Connect orphans to hubs if not connected
+            data.graph.nodes.forEach((n) => {
+              if (!edges.some((e) => e.from === n.id || e.to === n.id)) {
+                edges.push({
+                  from: n.group,
+                  to: n.id,
+                  color: { opacity: 0.1 },
+                });
+              }
+            });
+          } else {
+            nodes = [
+              {
+                id: "L2",
+                label: "CONCEPTS",
+                color: "#3b82f6",
+                shape: "diamond",
+                size: 25,
+              },
+              {
+                id: "L3",
+                label: "PROJECTS",
+                color: "#10b981",
+                shape: "diamond",
+                size: 25,
+              },
+              {
+                id: "L4",
+                label: "OUTPUTS",
+                color: "#a855f7",
+                shape: "diamond",
+                size: 25,
+              },
+            ];
+            data.recent_files.forEach((f, i) => {
+              let group = "L2";
+              if (f.path.includes("projects/")) group = "L3";
+              else if (f.path.includes("outputs/")) group = "L4";
+
+              nodes.push({
+                id: i,
+                label: f.name.replace(".md", ""),
+                color: { background: "#0a0e14", border: "#30363d" },
+                font: { color: "#8b949e", size: 9 },
+              });
+              edges.push({ from: group, to: i, color: { opacity: 0.3 } });
+            });
+          }
+
+          const container = document.getElementById("network-container");
+          const graphData = {
+            nodes: new vis.DataSet(nodes),
+            edges: new vis.DataSet(edges),
+          };
+          const options = {
+            physics: { enabled: true, solver: "forceAtlas2Based" },
+            nodes: { shadow: true },
+          };
+          if (!network)
+            network = new vis.Network(container, graphData, options);
+
+          document.getElementById("update-timer").innerText =
+            `LAST PULSE: ${new Date().toLocaleTimeString()}`;
+        } catch (e) {
+          console.error("Dash Error", e);
+        }
       }
 
-      // 초기 실행
       updateDashboard();
-
-      // 환경 감지식 펄스 주기 설정 (로컬은 5초, 클라우드는 60초 폴링)
-      const pulseInterval = isLocal ? 5000 : 60000;
-      setInterval(updateDashboard, pulseInterval);
+      setInterval(updateDashboard, 10000);
     </script>
   </body>
 </html>
